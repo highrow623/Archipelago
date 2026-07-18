@@ -173,21 +173,24 @@ def compare_create():
                 err(f"location {location_name} parent region is defined for old location but not old")
             elif new_location.parent_region is not None and old_location.parent_region is not None \
                     and new_location.parent_region.name != old_location.parent_region.name:
-                err(f"location {location_name}: parent regions don't match; new: {new_location.parent_region.name}, old: {old_location.parent_region.name}")
+                err(f"location {location_name}: parent regions don't match; "
+                    f"new: {new_location.parent_region.name}, old: {old_location.parent_region.name}")
             if new_location.address is not None and old_location.address is None:
                 err(f"location {location_name} address is defined for new location but not old")
             elif new_location.address is None and old_location.address is not None:
                 err(f"location {location_name} address is defined for old location but not old")
             elif new_location.address is not None and old_location.address is not None \
                     and new_location.address != old_location.address:
-                err(f"location {location_name}: addresses don't match; new: {new_location.address}, old: {old_location.address}")
+                err(f"location {location_name}: addresses don't match; "
+                    f"new: {new_location.address}, old: {old_location.address}")
             if new_location.item is not None and old_location.item is None:
                 err(f"location {location_name} item is defined for new location but not old")
             elif new_location.item is None and old_location.item is not None:
                 err(f"location {location_name} item is defined for old location but not old")
             elif new_location.item is not None and old_location.item is not None \
                     and new_location.item.name != old_location.item.name:
-                err(f"location {location_name}: items don't match; new: {new_location.item.name}, old: {old_location.item.name}")
+                err(f"location {location_name}: items don't match; "
+                    f"new: {new_location.item.name}, old: {old_location.item.name}")
         for location_name in old_locations:
             if location_name not in new_locations:
                 err(f"location {location_name} is in the old world but not the new world")
