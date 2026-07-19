@@ -76,7 +76,9 @@ def setup(
         "randomize_books": randomize_books,
         "randomize_notes": randomize_notes,
     }
-    return (setup_one_mw(new_game, args_obj, seed), setup_one_mw(old_game, args_obj, seed))
+    new_mw = setup_one_mw(new_game, args_obj, seed)
+    old_mw = setup_one_mw(old_game, args_obj, new_mw.seed)
+    return new_mw, old_mw
 
 def compare_create():
     # the new apworld will not create entrances if the rule always evaluates to false as an optimization. this happens
