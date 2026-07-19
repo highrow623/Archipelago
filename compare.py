@@ -1,12 +1,21 @@
+from argparse import Namespace
+import random
 from typing import Literal, TypeAlias, get_args
 
 from BaseClasses import CollectionState, MultiWorld
-import Options
+from Generate import get_seed_name
 
+from test.general import gen_steps
+from worlds import AutoWorld
+from worlds.AutoWorld import call_all
 from worlds.pseudoregalia import PseudoregaliaWorld as NewPseudoWorld
-import worlds.pseudoregalia.options as new_options
 from worlds.pseudoregalia_old import PseudoregaliaWorld as OldPseudoWorld
-import worlds.pseudoregalia_old.options as old_options
+
+new_game = NewPseudoWorld.game
+old_game = OldPseudoWorld.game
+new_options_type_hints = AutoWorld.AutoWorldRegister.world_types[new_game].options_dataclass.type_hints
+old_options_type_hints = AutoWorld.AutoWorldRegister.world_types[old_game].options_dataclass.type_hints
+assert new_options_type_hints.keys() == old_options_type_hints.keys()
 
 """
 options:
@@ -29,88 +38,52 @@ LogicLevel: TypeAlias = Literal["normal", "hard", "expert", "lunatic"]
 SpawnPoint: TypeAlias = Literal["castle_main", "castle_gazebo", "dungeon_mirror", "library", "underbelly_south",
                                 "underbelly_big_room", "bailey_main", "keep_main", "keep_north", "theatre_main"]
 
+def create_args(**kwargs) -> Namespace:
+    args = Namespace()
+    for name in new_options_type_hints:
+        new_option = new_options_type_hints[name]
+        old_option = old_options_type_hints[name]
+        setattr(args, name, {
+            1: new_option.from_any(kwargs.get(name, new_option.default)),
+            2: old_option.from_any(kwargs.get(name, old_option.default)),
+        })
+    return args
+
 def setup(
         *, game_version: GameVersion = "map_patch", logic_level: LogicLevel = "normal", obscure_logic: bool = False,
         spawn_point: SpawnPoint = "castle_main", progressive_breaker: bool = True, progressive_slide: bool = True,
         split_sun_greaves: bool = False, split_cling_gem: bool = False, randomize_time_trials: bool = False,
         randomize_goats: bool = False, randomize_chairs: bool = False, randomize_books: bool = False,
-        randomize_notes: bool = False) -> MultiWorld:
+        randomize_notes: bool = False, seed: int | None = None) -> MultiWorld:
     mw = MultiWorld(2)
-    mw.worlds[1] = NewPseudoWorld(mw, 1)
-    mw.worlds[2] = OldPseudoWorld(mw, 2)
+    mw.game[1] = new_game
+    mw.game[2] = old_game
+    mw.player_name = {
+        1: f"{new_game} Tester",
+        2: f"{old_game} Tester",
+    }
+    mw.set_seed(seed)
+    random.seed(mw.seed)
+    mw.seed_name = get_seed_name(random)
+    args = create_args(**{
+        "game_version": game_version,
+        "logic_level": logic_level,
+        "obscure_logic": obscure_logic,
+        "spawn_point": spawn_point,
+        "progressive_breaker": progressive_breaker,
+        "progressive_slide": progressive_slide,
+        "split_sun_greaves": split_sun_greaves,
+        "split_cling_gem": split_cling_gem,
+        "randomize_time_trials": randomize_time_trials,
+        "randomize_goats": randomize_goats,
+        "randomize_chairs": randomize_chairs,
+        "randomize_books": randomize_books,
+        "randomize_notes": randomize_notes,
+    })
+    mw.set_options(args)
     mw.state = CollectionState(mw)
-
-    mw.worlds[1].options = new_options.PseudoregaliaOptions(
-        progression_balancing=Options.ProgressionBalancing(Options.ProgressionBalancing.default),
-        accessibility=Options.Accessibility(Options.Accessibility.default),
-        local_items=Options.LocalItems([]),
-        non_local_items=Options.NonLocalItems([]),
-        start_inventory=Options.StartInventory({}),
-        start_hints=Options.StartHints([]),
-        start_location_hints=Options.StartLocationHints([]),
-        exclude_locations=Options.ExcludeLocations([]),
-        priority_locations=Options.PriorityLocations([]),
-        item_links=Options.ItemLinks([]),
-        plando_items=Options.PlandoItems([]),
-        game_version=new_options.GameVersion(getattr(new_options.GameVersion, f"option_{game_version}")),
-        logic_level=new_options.LogicLevel(getattr(new_options.LogicLevel, f"option_{logic_level}")),
-        obscure_logic=new_options.ObscureLogic(1 if obscure_logic else 0),
-        spawn_point=new_options.SpawnPoint(getattr(new_options.SpawnPoint, f"option_{spawn_point}")),
-        progressive_breaker=new_options.ProgressiveBreaker(1 if progressive_breaker else 0),
-        progressive_slide=new_options.ProgressiveSlide(1 if progressive_slide else 0),
-        split_sun_greaves=new_options.SplitSunGreaves(1 if split_sun_greaves else 0),
-        split_cling_gem=new_options.SplitClingGem(1 if split_cling_gem else 0),
-        start_with_breaker=new_options.StartWithBreaker(0),
-        start_with_map=new_options.StartWithMap(0),
-        randomize_time_trials=new_options.RandomizeTimeTrials(1 if randomize_time_trials else 0),
-        randomize_goats=new_options.RandomizeTimeTrials(1 if randomize_goats else 0),
-        randomize_chairs=new_options.RandomizeTimeTrials(1 if randomize_chairs else 0),
-        randomize_books=new_options.RandomizeTimeTrials(1 if randomize_books else 0),
-        randomize_notes=new_options.RandomizeTimeTrials(1 if randomize_notes else 0),
-        major_key_hints=new_options.MajorKeyHints(1),
-    )
-    mw.worlds[2].options = old_options.PseudoregaliaOptions(
-        progression_balancing=Options.ProgressionBalancing(Options.ProgressionBalancing.default),
-        accessibility=Options.Accessibility(Options.Accessibility.default),
-        local_items=Options.LocalItems([]),
-        non_local_items=Options.NonLocalItems([]),
-        start_inventory=Options.StartInventory({}),
-        start_hints=Options.StartHints([]),
-        start_location_hints=Options.StartLocationHints([]),
-        exclude_locations=Options.ExcludeLocations([]),
-        priority_locations=Options.PriorityLocations([]),
-        item_links=Options.ItemLinks([]),
-        plando_items=Options.PlandoItems([]),
-        game_version=old_options.GameVersion(getattr(old_options.GameVersion, f"option_{game_version}")),
-        logic_level=old_options.LogicLevel(getattr(old_options.LogicLevel, f"option_{logic_level}")),
-        obscure_logic=old_options.ObscureLogic(1 if obscure_logic else 0),
-        spawn_point=old_options.SpawnPoint(getattr(old_options.SpawnPoint, f"option_{spawn_point}")),
-        progressive_breaker=old_options.ProgressiveBreaker(1 if progressive_breaker else 0),
-        progressive_slide=old_options.ProgressiveSlide(1 if progressive_slide else 0),
-        split_sun_greaves=old_options.SplitSunGreaves(1 if split_sun_greaves else 0),
-        split_cling_gem=old_options.SplitClingGem(1 if split_cling_gem else 0),
-        start_with_breaker=old_options.StartWithBreaker(0),
-        start_with_map=old_options.StartWithMap(0),
-        randomize_time_trials=old_options.RandomizeTimeTrials(1 if randomize_time_trials else 0),
-        randomize_goats=old_options.RandomizeTimeTrials(1 if randomize_goats else 0),
-        randomize_chairs=old_options.RandomizeTimeTrials(1 if randomize_chairs else 0),
-        randomize_books=old_options.RandomizeTimeTrials(1 if randomize_books else 0),
-        randomize_notes=old_options.RandomizeTimeTrials(1 if randomize_notes else 0),
-        major_key_hints=old_options.MajorKeyHints(1),        
-    )
-
-    mw.worlds[1].generate_early()
-    mw.worlds[2].generate_early()
-
-    mw.worlds[1].create_regions()
-    mw.worlds[2].create_regions()
-
-    mw.worlds[1].create_items()
-    mw.worlds[2].create_items()
-
-    mw.worlds[1].set_rules()
-    mw.worlds[2].set_rules()
-
+    for step in gen_steps:
+        call_all(mw, step)
     return mw
 
 def compare_create():
