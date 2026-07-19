@@ -35,15 +35,6 @@ LogicLevel: TypeAlias = Literal["normal", "hard", "expert", "lunatic"]
 SpawnPoint: TypeAlias = Literal["castle_main", "castle_gazebo", "dungeon_mirror", "library", "underbelly_south",
                                 "underbelly_big_room", "bailey_main", "keep_main", "keep_north", "theatre_main"]
 
-def create_args(game: str, **kwargs) -> Namespace:
-    args = Namespace()
-    type_hints = AutoWorld.AutoWorldRegister.world_types[game].options_dataclass.type_hints
-    for name, option in type_hints.items():
-        setattr(args, name, {
-            1: option.from_any(kwargs.get(name, option.default)),
-        })
-    return args
-
 def setup_one_mw(game: str, args_obj: dict[str, Any], seed: int | None) -> MultiWorld:
     mw = MultiWorld(1)
     mw.game[1] = game
@@ -53,7 +44,11 @@ def setup_one_mw(game: str, args_obj: dict[str, Any], seed: int | None) -> Multi
     mw.set_seed(seed)
     random.seed(mw.seed)
     mw.seed_name = get_seed_name(random)
-    args = create_args(game, **args_obj)
+    args = Namespace()
+    for name, option in AutoWorld.AutoWorldRegister.world_types[game].options_dataclass.type_hints.items():
+        setattr(args, name, {
+            1: option.from_any(args_obj.get(name, option.default)),
+        })
     mw.set_options(args)
     mw.state = CollectionState(mw)
     for step in gen_steps:
