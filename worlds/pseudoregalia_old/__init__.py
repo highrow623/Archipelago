@@ -31,7 +31,7 @@ class PseudoregaliaWorld(World):
     dream-like castle to explore.
     """
 
-    game = "Pseudoregalia (Old)"
+    game = "Pseudoregalia"
     required_client_version = (0, 7, 0)
  
     item_name_to_id = {name: data.code for name, data in item_table.items() if data.code is not None}

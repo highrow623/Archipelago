@@ -5,7 +5,7 @@ from .. import PseudoregaliaWorld
 
 
 class PseudoTestBase(WorldTestBase):
-    game = "Pseudoregalia (Old)"
+    game = "Pseudoregalia"
     world: PseudoregaliaWorld
 
 

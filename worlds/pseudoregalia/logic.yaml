@@ -88,9 +88,9 @@ ref_rules:
         - ref: can_slide_jump
   - name: can_gold_slide_ultra
     rule:
-      options:
-        game_version: map_patch
       has: slide
+      options:
+        game_version: full_gold
       # currently this rule is only applied for high enough logic, but should be refactored to include here
   - name: can_attack
     rule:
@@ -652,8 +652,7 @@ regions:
             - or:
                 - has:
                     cling: 2
-                - has:
-                    kick: 1
+                - has: kick
       - region: Library Top
         rule:
           or:
@@ -715,11 +714,11 @@ regions:
                         - plunge
                         - kick
                     - has:
-                        plunge: 1
-                        light: 1
+                        - plunge
+                        - light
                     - has:
-                        kick: 1
-                        light: 1
+                        - kick
+                        - light
             - and:
                 - ref: can_bounce
                 - has:
@@ -789,7 +788,7 @@ regions:
                 breaker: 1
                 cling: 2
               tags:
-                logic_level: 3
+                logic_level: 4
             - and:
                 - ref: can_gold_ultra
                 - ref: can_bounce
@@ -798,7 +797,7 @@ regions:
                     - kick
                     - plunge
               tags:
-                logic_level: 3
+                logic_level: 4
       - region: Keep => Underbelly
         rule:
           or:
@@ -1146,8 +1145,8 @@ regions:
                 plunge: 1
                 kick: 2
             - has:
-                plunge: 1
-                kick: 1
+                - plunge
+                - kick
               tags:
                 logic_level: 2
             - has:
@@ -1375,17 +1374,18 @@ regions:
     exits:
       - region: Underbelly Main Lower
         rule:
-          and:
-            - has: plunge
-            - or:
-                - ref: can_attack
-                - and:
-                    - ref: can_slide_jump
-                    - has:
-                        cling: 2
-                - and:
-                    - ref: can_slide_jump
-                    - has: kick
+          or:
+            - and:
+                - has: plunge
+                - or:
+                    - ref: can_attack
+                    - and:
+                        - ref: can_slide_jump
+                        - has:
+                            cling: 2
+                    - and:
+                        - ref: can_slide_jump
+                        - has: kick
             - has:
                 - plunge
                 - kick
@@ -1958,7 +1958,7 @@ locations:
         - has: slide
           tags:
             logic_level: 3
-        - has: light
+        - ref: can_bounce
           tags:
             logic_level: 4
   - name: Castle Sansa - Tall Room Near Wheel Crawlers
@@ -1992,7 +1992,7 @@ locations:
     region: Castle Main
     rule:
       or:
-        - has: light
+        - ref: can_bounce
         - has:
             cling: 2
         - has:
@@ -2107,7 +2107,7 @@ locations:
             logic_level: 2
         - has:
             cling: 2
-            kick: 2
+            kick: 1
           tags:
             logic_level: 2
         - ref: can_gold_slide_ultra
@@ -2225,8 +2225,7 @@ locations:
             cling: 2
         - has: kick
         - ref: can_slide_jump
-        - has:
-            kick_or_plunge: 1
+        - has: kick_or_plunge
           tags:
             logic_level: 2
         - has: slide

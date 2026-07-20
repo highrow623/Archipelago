@@ -5,7 +5,7 @@ from .options import PseudoregaliaOptions
 
 
 class PseudoregaliaLocation(Location):
-    game = "Pseudoregalia (Old)"
+    game = "Pseudoregalia"
 
 
 class PseudoregaliaLocationData(NamedTuple):
