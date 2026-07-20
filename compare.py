@@ -1,5 +1,6 @@
 import argparse
 from argparse import Namespace
+import itertools
 import random
 import re
 from typing import Any, Literal, TypeAlias, get_args
@@ -17,50 +18,52 @@ new_game = NewPseudoWorld.game
 old_game = OldPseudoWorld.game
 
 # setup all args for logic checking. the idea is to combine all these variations in all combinations
-base = {"randomize_time_trials": True, "randomize_goats": True, "randomize_chairs": True, "randomize_books": True,
-        "randomize_notes": True}
-versions = {
-    "mp": {},
-    "fg": {"game_version": "full_gold"},
-}
-difficulties = {
-    "normal": {},
-    "normal_obscure": {"obscure_logic": True},
-    "hard": {"logic_level": "hard"},
-    "hard_obscure": {"logic_level": "hard", "obscure_logic": True},
-    "expert": {"logic_level": "expert"},
-    "lunatic": {"logic_level": "lunatic"},
-}
-spawns = {
-    "castle": {},
-    "gazebo": {"spawn_point": "castle_gazebo"},
-    "dungeon": {"spawn_point": "dungeon_mirror"},
-    "library": {"spawn_point": "library"},
-    "ub_south": {"spawn_point": "underbelly_south"},
-    "ub_main": {"spawn_point": "underbelly_big_room"},
-    "bailey": {"spawn_point": "bailey_main"},
-    "keep": {"spawn_point": "keep_main"},
-    "keep_north": {"spawn_point": "keep_north"},
-    "theatre": {"spawn_point": "theatre_main"},
-}
-splits = {
-    "no_split": {},
-    "split": {"split_sun_greaves": True, "split_cling_gem": True},
-}
-progressives = {
-    "progressive": {},
-    "no_progressive": {"progressive_breaker": False, "progressive_slide": False},
-}
+arg_categories = [
+    {
+        "mp": {},
+        "fg": {"game_version": "full_gold"},
+    },
+    {
+        "normal": {},
+        "normal_obscure": {"obscure_logic": True},
+        "hard": {"logic_level": "hard"},
+        "hard_obscure": {"logic_level": "hard", "obscure_logic": True},
+        "expert": {"logic_level": "expert"},
+        "lunatic": {"logic_level": "lunatic"},
+    },
+    {
+        "castle": {},
+        "gazebo": {"spawn_point": "castle_gazebo"},
+        "dungeon": {"spawn_point": "dungeon_mirror"},
+        "library": {"spawn_point": "library"},
+        "ub_south": {"spawn_point": "underbelly_south"},
+        "ub_main": {"spawn_point": "underbelly_big_room"},
+        "bailey": {"spawn_point": "bailey_main"},
+        "keep": {"spawn_point": "keep_main"},
+        "keep_north": {"spawn_point": "keep_north"},
+        "theatre": {"spawn_point": "theatre_main"},
+    },
+    {
+        "no_split": {},
+        "split": {"split_sun_greaves": True, "split_cling_gem": True},
+    },
+    {
+        "progressive": {},
+        "no_progressive": {"progressive_breaker": False, "progressive_slide": False},
+    },
+    {
+        "extra_checks": {},
+        "no_extra_checks": {"randomize_time_trials": True, "randomize_goats": True, "randomize_chairs": True,
+                            "randomize_books": True, "randomize_notes": True},
+    },
+]
 logic_args = {}
-# this is ugly as shit but idk how to do it any cleaner
-for version, version_args in versions.items():
-    for difficulty, difficulty_args in difficulties.items():
-        for spawn, spawn_args in spawns.items():
-            for split, split_args in splits.items():
-                for progressive, progressive_args in progressives.items():
-                    desc = f"{version}-{difficulty}-{spawn}-{split}-{progressive}"
-                    args = {**base, **version_args, **difficulty_args, **spawn_args, **split_args, **progressive_args}
-                    logic_args[desc] = args
+for variation in itertools.product(*(category.keys() for category in arg_categories)):
+    desc = "-".join(variation)
+    args = {}
+    for i, category_desc in enumerate(variation):
+        args.update(arg_categories[i][category_desc])
+    logic_args[desc] = args
 
 GameVersion: TypeAlias = Literal["map_patch", "full_gold"]
 LogicLevel: TypeAlias = Literal["normal", "hard", "expert", "lunatic"]
@@ -120,9 +123,8 @@ def fill(new_mw: MultiWorld, old_mw: MultiWorld):
     call_all(new_mw, "finalize_multiworld")
     assert len(new_mw.get_unfilled_locations()) == 0, f"{new_game}: seed {new_mw.seed}: fill did not fill all locations"
 
-    # just copying item placements over serves our puroses in this script but I don't think it's technically "proper"
-    old_unfilled_locations = old_mw.get_unfilled_locations()
-    for old_location in old_unfilled_locations:
+    # just copying item placements over serves our purposes in this script but I don't think it's technically "proper"
+    for old_location in old_mw.get_unfilled_locations():
         new_location = new_mw.get_location(old_location.name, 1)
         old_location.item = old_mw.worlds[1].create_item(new_location.item.name)
 
